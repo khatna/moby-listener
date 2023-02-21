@@ -10,9 +10,6 @@ import (
 )
 
 func main() {
-	fmt.Println(os.Getenv("BTC_RPC_HOST"))
-
-	// initialize rpc client
 	connCfg := &rpcclient.ConnConfig{
 		Host:         os.Getenv("BTC_RPC_HOST"),
 		User:         os.Getenv("BTC_RPC_USER"),
@@ -58,6 +55,6 @@ func main() {
 		// https://developer.bitcoin.org/reference/rpc/decoderawtransaction.html
 		rawtxResult, _ := client.DecodeRawTransaction([]byte(rawtx))
 
-		fmt.Printf("%v - %v BTC\n", rawtxResult.Hash, rawtxResult.Vout[0].Value)
+		fmt.Printf("%v - %v BTC\n", rawtxResult.Txid, rawtxResult.Vout[0].Value)
 	}
 }
