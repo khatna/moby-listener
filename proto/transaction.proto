@@ -5,7 +5,7 @@ option go_package = "github.com/khatna/moby-listener/proto";
 service TxHandler {
     // Get a stream of transactions with a greater value than
     // float argument
-    rpc Get(Value) returns (stream Tx);
+    rpc GetTransactions(Value) returns (stream Tx);
 }
 
 // Basic transaction message

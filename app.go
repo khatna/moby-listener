@@ -7,6 +7,8 @@ import (
 
 	"github.com/btcsuite/btcd/rpcclient"
 	"github.com/pebbe/zmq4"
+
+	pb "github.com/khatna/moby-listener/proto"
 )
 
 func main() {
@@ -37,6 +39,11 @@ func main() {
 
 	sock.SetSubscribe("rawtx")
 
+	// start gRPC server
+	s := StartServer()
+
+	// defer stop server
+
 	// Receive messages
 	for {
 		msg, err := sock.RecvMessage(0)
@@ -48,13 +55,18 @@ func main() {
 
 		if err != nil {
 			fmt.Println(err)
-			break
+			return
 		}
 
 		// Synchronously decode for now - no optimization necessary
 		// https://developer.bitcoin.org/reference/rpc/decoderawtransaction.html
 		rawtxResult, _ := client.DecodeRawTransaction([]byte(rawtx))
-
-		fmt.Printf("%v - %v BTC\n", rawtxResult.Txid, rawtxResult.Vout[0].Value)
+		tx := &pb.Tx{
+			Txid:  rawtxResult.Txid,
+			From:  "Someone",
+			To:    "Someone2",
+			Value: float32(rawtxResult.Vout[0].Value),
+		}
+		s.NewTransaction(tx)
 	}
 }

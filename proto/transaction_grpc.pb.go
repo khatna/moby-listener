@@ -24,7 +24,7 @@ const _ = grpc.SupportPackageIsVersion7
 type TxHandlerClient interface {
 	// Get a stream of transactions with a greater value than
 	// float argument
-	Get(ctx context.Context, in *Value, opts ...grpc.CallOption) (TxHandler_GetClient, error)
+	GetTransactions(ctx context.Context, in *Value, opts ...grpc.CallOption) (TxHandler_GetTransactionsClient, error)
 }
 
 type txHandlerClient struct {
@@ -35,12 +35,12 @@ func NewTxHandlerClient(cc grpc.ClientConnInterface) TxHandlerClient {
 	return &txHandlerClient{cc}
 }
 
-func (c *txHandlerClient) Get(ctx context.Context, in *Value, opts ...grpc.CallOption) (TxHandler_GetClient, error) {
-	stream, err := c.cc.NewStream(ctx, &TxHandler_ServiceDesc.Streams[0], "/TxHandler/Get", opts...)
+func (c *txHandlerClient) GetTransactions(ctx context.Context, in *Value, opts ...grpc.CallOption) (TxHandler_GetTransactionsClient, error) {
+	stream, err := c.cc.NewStream(ctx, &TxHandler_ServiceDesc.Streams[0], "/TxHandler/GetTransactions", opts...)
 	if err != nil {
 		return nil, err
 	}
-	x := &txHandlerGetClient{stream}
+	x := &txHandlerGetTransactionsClient{stream}
 	if err := x.ClientStream.SendMsg(in); err != nil {
 		return nil, err
 	}
@@ -50,16 +50,16 @@ func (c *txHandlerClient) Get(ctx context.Context, in *Value, opts ...grpc.CallO
 	return x, nil
 }
 
-type TxHandler_GetClient interface {
+type TxHandler_GetTransactionsClient interface {
 	Recv() (*Tx, error)
 	grpc.ClientStream
 }
 
-type txHandlerGetClient struct {
+type txHandlerGetTransactionsClient struct {
 	grpc.ClientStream
 }
 
-func (x *txHandlerGetClient) Recv() (*Tx, error) {
+func (x *txHandlerGetTransactionsClient) Recv() (*Tx, error) {
 	m := new(Tx)
 	if err := x.ClientStream.RecvMsg(m); err != nil {
 		return nil, err
@@ -73,7 +73,7 @@ func (x *txHandlerGetClient) Recv() (*Tx, error) {
 type TxHandlerServer interface {
 	// Get a stream of transactions with a greater value than
 	// float argument
-	Get(*Value, TxHandler_GetServer) error
+	GetTransactions(*Value, TxHandler_GetTransactionsServer) error
 	mustEmbedUnimplementedTxHandlerServer()
 }
 
@@ -81,8 +81,8 @@ type TxHandlerServer interface {
 type UnimplementedTxHandlerServer struct {
 }
 
-func (UnimplementedTxHandlerServer) Get(*Value, TxHandler_GetServer) error {
-	return status.Errorf(codes.Unimplemented, "method Get not implemented")
+func (UnimplementedTxHandlerServer) GetTransactions(*Value, TxHandler_GetTransactionsServer) error {
+	return status.Errorf(codes.Unimplemented, "method GetTransactions not implemented")
 }
 func (UnimplementedTxHandlerServer) mustEmbedUnimplementedTxHandlerServer() {}
 
@@ -97,24 +97,24 @@ func RegisterTxHandlerServer(s grpc.ServiceRegistrar, srv TxHandlerServer) {
 	s.RegisterService(&TxHandler_ServiceDesc, srv)
 }
 
-func _TxHandler_Get_Handler(srv interface{}, stream grpc.ServerStream) error {
+func _TxHandler_GetTransactions_Handler(srv interface{}, stream grpc.ServerStream) error {
 	m := new(Value)
 	if err := stream.RecvMsg(m); err != nil {
 		return err
 	}
-	return srv.(TxHandlerServer).Get(m, &txHandlerGetServer{stream})
+	return srv.(TxHandlerServer).GetTransactions(m, &txHandlerGetTransactionsServer{stream})
 }
 
-type TxHandler_GetServer interface {
+type TxHandler_GetTransactionsServer interface {
 	Send(*Tx) error
 	grpc.ServerStream
 }
 
-type txHandlerGetServer struct {
+type txHandlerGetTransactionsServer struct {
 	grpc.ServerStream
 }
 
-func (x *txHandlerGetServer) Send(m *Tx) error {
+func (x *txHandlerGetTransactionsServer) Send(m *Tx) error {
 	return x.ServerStream.SendMsg(m)
 }
 
@@ -127,8 +127,8 @@ var TxHandler_ServiceDesc = grpc.ServiceDesc{
 	Methods:     []grpc.MethodDesc{},
 	Streams: []grpc.StreamDesc{
 		{
-			StreamName:    "Get",
-			Handler:       _TxHandler_Get_Handler,
+			StreamName:    "GetTransactions",
+			Handler:       _TxHandler_GetTransactions_Handler,
 			ServerStreams: true,
 		},
 	},
