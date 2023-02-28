@@ -1,37 +1,24 @@
 package main
 
 import (
+	"encoding/hex"
 	"fmt"
 	"log"
 	"os"
+	"sync"
 
-	"github.com/btcsuite/btcd/rpcclient"
 	"github.com/pebbe/zmq4"
-
-	pb "github.com/khatna/moby-listener/proto"
 )
 
-func main() {
-	connCfg := &rpcclient.ConnConfig{
-		Host:         os.Getenv("BTC_RPC_HOST"),
-		User:         os.Getenv("BTC_RPC_USER"),
-		Pass:         os.Getenv("BTC_RPC_PASS"),
-		HTTPPostMode: true, // Bitcoin core only supports HTTP POST mode
-		DisableTLS:   true, // Bitcoin core does not provide TLS by default
-	}
-	client, err := rpcclient.New(connCfg, nil)
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer client.Shutdown()
-
+// listen to raw tx's from sock, decode it, and send to byte channel
+func forwardRawTxs(ch chan []byte) {
 	// connect to tcp sockets to listen to txos
 	zctx, _ := zmq4.NewContext()
 	sock, _ := zctx.NewSocket(zmq4.SUB)
 	defer zctx.Term()
 	defer sock.Close()
 
-	err = sock.Connect(os.Getenv("BTC_TCP_ENDPOINT"))
+	err := sock.Connect(os.Getenv("BTC_TCP_ENDPOINT"))
 
 	if err != nil {
 		log.Fatal(err)
@@ -39,34 +26,51 @@ func main() {
 
 	sock.SetSubscribe("rawtx")
 
-	// start gRPC server
-	s := StartServer()
-
-	// defer stop server
-
-	// Receive messages
+	// listen on socket until err
 	for {
 		msg, err := sock.RecvMessage(0)
 
-		// the main encoded raw transaction is the second message
-		// in a multipart message:
-		// https://github.com/bitcoin/bitcoin/blob/master/doc/zmq.md
-		rawtx := msg[1]
-
 		if err != nil {
 			fmt.Println(err)
+			close(ch)
 			return
 		}
 
-		// Synchronously decode for now - no optimization necessary
-		// https://developer.bitcoin.org/reference/rpc/decoderawtransaction.html
-		rawtxResult, _ := client.DecodeRawTransaction([]byte(rawtx))
-		tx := &pb.Tx{
-			Txid:  rawtxResult.Txid,
-			From:  "Someone",
-			To:    "Someone2",
-			Value: float32(rawtxResult.Vout[0].Value),
-		}
-		s.NewTransaction(tx)
+		// the main encoded raw transaction is the second message in a multipart message:
+		// https://github.com/bitcoin/bitcoin/blob/master/doc/zmq.md
+		rawtx := msg[1]
+		go decodeRawTransaction(hex.EncodeToString([]byte(rawtx)), ch)
 	}
+}
+
+// read bytes from the decoded tx channel, create simple pb.Tx structures,
+// and register them in the gRPC server
+func directToServer(txJsonCh chan []byte, s *txHandlerService) {
+	for txJson := range txJsonCh {
+		// TODO: check err
+		txs := jsonToTxs(txJson)
+
+		if txs == nil {
+			continue
+		}
+
+		for _, tx := range jsonToTxs(txJson) {
+			s.newTransaction(tx)
+		}
+	}
+}
+
+func main() {
+	var wg sync.WaitGroup
+
+	// start gRPC server
+	s := startServer()
+
+	// create communication channels
+	decodedTx := make(chan []byte)
+
+	wg.Add(2)
+	go forwardRawTxs(decodedTx)
+	go directToServer(decodedTx, s)
+	wg.Wait()
 }
