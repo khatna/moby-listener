@@ -61,6 +61,22 @@ func directToServer(txJsonCh chan []byte, s *txHandlerService) {
 }
 
 func main() {
+	if os.Getenv("BTC_TCP_ENDPOINT") == "" {
+		log.Fatal("Please set the BTC_TCP_ENDPOINT evnironment variable.")
+	}
+
+	if os.Getenv("BTC_RPC_HOST") == "" {
+		log.Fatal("Please set the BTC_RPC_HOST evnironment variable.")
+	}
+
+	if os.Getenv("BTC_RPC_USER") == "" {
+		log.Fatal("Please set the BTC_RPC_USER evnironment variable.")
+	}
+
+	if os.Getenv("BTC_RPC_PASS") == "" {
+		log.Fatal("Please set the BTC_RPC_PASS evnironment variable.")
+	}
+
 	var wg sync.WaitGroup
 
 	// start gRPC server
