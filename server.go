@@ -27,7 +27,9 @@ func (s *txHandlerService) GetTransactions(value *pb.Value, stream pb.TxHandler_
 	conn := &connection{make(chan *pb.Tx), value.Value}
 	s.conns[conn] = struct{}{}
 	for tx := range conn.ch {
-		fmt.Println(tx)
+		if err := stream.Send(tx); err != nil {
+			return err
+		}
 	}
 	delete(s.conns, conn)
 	return nil

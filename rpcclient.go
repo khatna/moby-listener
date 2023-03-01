@@ -60,20 +60,3 @@ func decodeRawTransaction(rawtxHex string, ch chan []byte) {
 
 	ch <- bodyBytes
 }
-
-// https://bitcoincore.org/en/doc/22.0.0/rpc/blockchain/gettxout/
-func getTxOut(txid string, n int, ch chan []byte) {
-	method := "gettxout"
-	params := []interface{}{txid, n}
-	res, err := sendPostRequest(method, params)
-
-	if err != nil {
-		return
-	}
-	defer res.Body.Close()
-
-	// TODO: check by status code
-	bodyBytes, _ := io.ReadAll(res.Body)
-	fmt.Println(string(bodyBytes))
-	ch <- bodyBytes
-}
