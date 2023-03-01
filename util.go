@@ -42,11 +42,10 @@ func jsonToTxs(jsonBytes []byte) []*pb.Tx {
 	}
 
 	// create from string
-	var from string
+	from := fmt.Sprintf("%v wallets", len(unmarshalled.Result.Vin))
 	if len(unmarshalled.Result.Vin) > 1 {
-		from = fmt.Sprintf("%v wallets", len(unmarshalled.Result.Vin))
-	} else {
-		from = "1 wallet"
+		// pluraliza
+		from += "s"
 	}
 
 	// create pb.Tx structs

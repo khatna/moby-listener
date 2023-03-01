@@ -3,6 +3,7 @@ package main
 
 import (
 	"context"
+	"io"
 	"log"
 	"time"
 
@@ -23,7 +24,22 @@ func main() {
 	client := pb.NewTxHandlerClient(conn)
 
 	// Looking for a valid feature
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
 	defer cancel()
-	client.GetTransactions(ctx, &pb.Value{Value: 0.1})
+
+	stream, err := client.GetTransactions(ctx, &pb.Value{Value: 5.0})
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	for {
+		tx, err := stream.Recv()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			log.Fatalf("client.GetTransactions failed: %v", err)
+		}
+		log.Println(tx)
+	}
 }

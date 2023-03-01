@@ -66,6 +66,8 @@ func main() {
 	// start gRPC server
 	s := startServer()
 
+	fmt.Println("Server started...")
+
 	// create communication channels
 	decodedTx := make(chan []byte)
 
