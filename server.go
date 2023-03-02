@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"net"
+	"os"
 
 	pb "github.com/khatna/moby-listener/proto"
 	"google.golang.org/grpc"
@@ -61,7 +62,7 @@ func (s *txHandlerService) newTransaction(tx *pb.Tx) error {
 
 // Create a new gRPC server, start it, then return it
 func startServer() *txHandlerService {
-	lis, err := net.Listen("tcp", "localhost:50051")
+	lis, err := net.Listen("tcp", fmt.Sprintf("%v:%v", os.Getenv("GRPC_HOST"), os.Getenv("GRPC_PORT")))
 	if err != nil {
 		log.Fatalf("failed to listen: %v", err)
 	}
