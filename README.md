@@ -24,3 +24,5 @@ rpcuser=$BTC_RPC_USER
 rpcpassword=$BTC_RPC_PASS
 
 ```
+
+Finally, [libzmq](https://zeromq.org/download/) should be installed.
