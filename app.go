@@ -47,7 +47,6 @@ func forwardRawTxs(ch chan []byte) {
 // and register them in the gRPC server
 func directToServer(txJsonCh chan []byte, s *txHandlerService) {
 	for txJson := range txJsonCh {
-		fmt.Println("Tx")
 		// TODO: check err
 		txs := jsonToTxs(txJson)
 
