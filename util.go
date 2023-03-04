@@ -38,6 +38,7 @@ func jsonToTxs(jsonBytes []byte) []*pb.Tx {
 
 	if err != nil {
 		fmt.Println("Error encountered while unmarshalling JSON: ", err)
+		fmt.Println(string(jsonBytes))
 		return nil
 	}
 

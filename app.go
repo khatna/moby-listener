@@ -39,7 +39,7 @@ func forwardRawTxs(ch chan []byte) {
 		// the main encoded raw transaction is the second message in a multipart message:
 		// https://github.com/bitcoin/bitcoin/blob/master/doc/zmq.md
 		rawtx := msg[1]
-		go decodeRawTransaction(hex.EncodeToString([]byte(rawtx)), ch)
+		decodeRawTransaction(hex.EncodeToString([]byte(rawtx)), ch)
 	}
 }
 
@@ -47,6 +47,7 @@ func forwardRawTxs(ch chan []byte) {
 // and register them in the gRPC server
 func directToServer(txJsonCh chan []byte, s *txHandlerService) {
 	for txJson := range txJsonCh {
+		fmt.Println("Tx")
 		// TODO: check err
 		txs := jsonToTxs(txJson)
 
